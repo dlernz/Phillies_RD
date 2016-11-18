@@ -20,6 +20,8 @@ main <- function(){
     cleansed <- filter(playerData, MarApr_PA > 0)
     regressionData <- performRegression(cleansed)
     estimatedAverages <- estimateBAvg(regressionData)
+    
+    
     avgEstimatedBA <- mean(estimatedAverages$avgEstimate)
     noPA <- filter(playerData, MarApr_PA == 0)
     noPA$avgEstimate <- avgEstimatedBA
@@ -29,7 +31,6 @@ main <- function(){
     noPAEstimates <- select(noPA, Name, MarApr_AVG, FullSeason_AVG, avgEstimate, percentError)
     outputEstimates <- rbind(estimatesPA, noPAEstimates)
     outputEstimates
-
 }
 
 ### Utilizes input data table from findEstimates function call and  a max/min for league BABIP, and 
@@ -48,19 +49,16 @@ estimateBAvg <- function(regressionData) {
         BBRate_orig <- regressionData$BB_percent/100.
         plateAppears <- regressionData$MarApr_PA
         homers <- regressionData$HR
-        numerator <- (((plateAppears - (BBRate_stable*plateAppears) - (strikeOutRate*plateAppears) - (plateAppears/80))*BABIPVal) + homers)
+        numerator <- (((plateAppears - (BBRate_stable*plateAppears) - (strikeOutRate*plateAppears))*BABIPVal) + homers)
         denominator <- (plateAppears - (BBRate_orig * plateAppears))
         estAvg <- numerator/denominator
         avgContainer[,index] <- estAvg
     }
     
     battingAverages <- cbind(battingAverages, avgContainer)
-    ### MarApr_AVG yields an error rate of 11.819%
-    ### MarApr_AVG, 0.34, 0.27 yields an error rate of 8.7%
-    targetAverages <- select(battingAverages, MarApr_AVG, 6,7)
+    targetAverages <- select(battingAverages, MarApr_AVG,6,7)
     battingAverages$avgEstimate <- rowMeans(targetAverages)
     battingAverages <- mutate(battingAverages, "percentError" = abs((FullSeason_AVG - avgEstimate)/FullSeason_AVG * 100))
-    print(paste(cor(battingAverages$FullSeason_AVG, battingAverages$avgEstimate), median(battingAverages$percentError), mean(battingAverages$percentError)))
     battingAverages
 }
 
